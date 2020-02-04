@@ -6,7 +6,7 @@ Don't use these contracts. They have not been audited. I threw this idea togethe
 
 ## What is this?
 
-These are two contracts, [ERC20FlashLender](https://github.com/Austin-Williams/easy-flash-loans/blob/master/contracts/ERC20FlashLender.sol) and [ETHFlashLender](https://github.com/Austin-Williams/easy-flash-loans/blob/master/contracts/ETHFlashLender.sol), which can be inherited by any other contract to give the inheriting contract flash-loan capability _without having to give any consideration to the rest of your contract_.
+These are two contracts, [ERC20FlashLender](https://github.com/Austin-Williams/easy-flash-loans/blob/master/contracts/ERC20FlashLender.sol) and [ETHFlashLender](https://github.com/Austin-Williams/easy-flash-loans/blob/master/contracts/ETHFlashLender.sol), which can be inherited by any other contract to give the inheriting contract flash-loan capability _without having to to lock down the rest of your contract with nonReentrant modifiers_.
 
 The goal is for you to be able to this:
 
@@ -14,20 +14,24 @@ The goal is for you to be able to this:
 contract MyContract is ERC20FlashLender, ETHFlashLender { ... }
 
 ```
-And then magically have safe flash-lending capability for your contract without having to worry about anything.
+And then magically have safe flash-lending capability for your contract without having to worry about anything (except for everything in the "Security Considerations" section at the bottom of this document).
 
 ## How is this different from other flash loans?
 
-With the usual flash-loan patterns you see in other projects, you very much DO have to be careful how the rest of your contract works. In particular, you need to lock down the all of the most interesting functionality with `nonReentrant` modifiers if you want to support flash loans (or else risk having your contract drained by attackers). For example, if you provide overcollateralized loans and also flash loans, your users will not be able to _use_ flash loans to liquidate overcollateralized loans that are in default -- because taking out the flash loan and then _reentering_ the contract to liquidate the defaulting loan would be blocked by your reentrancy gaurds.
+With the usual flash-loan patterns you see in other projects, you usually DO have to be lock down the rest of your contract functionality with `nonReentrant` modifiers -- meaning your users have to _go away to some other Ethereum project_ to use the money they borrowed from you.
+
+In particular, you need to lock down the all of the most interesting functionality with `nonReentrant` modifiers if you want to support flash loans (or else risk having your contract drained by attackers). For example, if you provide overcollateralized loans and also flash loans, your users will not be able to _use_ flash loans to liquidate overcollateralized loans that are in default -- because taking out the flash loan and then _reentering_ the contract to liquidate the defaulting loan would be blocked by your reentrancy gaurds.
 
 The usual flash-loan pattern requires your users to take their borrowed money to some other project. But with the easy-flash-loans pattern presented here, your users can borrow money from your project _and use it to interact with your project_. This can be quite powerful for any project that requires arbitraguers in order for your mechanisms to behave properly (e.g.: most interesting DeFi projects).
+
+For example, it could allow arbitraguers to to liqudate loans on your platform without requiring any up-front capital of their own and without having to go get a flash loan from some other project.
 
 ### Explaination of the problem
 
 Most other flash loans work like this (oversimplified example to get to the point):
 
 ```
-contract Lender {
+contract Lender is ReentrancyGuard {
   // [...]
   
   flashLoan(uint256 amount) public nonReentrant {
@@ -41,7 +45,7 @@ contract Lender {
     Borrower(msg.sender).execute();
     
     // calculate the interest the borrower has to pay
-    uint256 interest = amount.add(amount.mul(interestRate).div(100));
+    uint256 interest = amount.mul(interestRate).div(100);
     
     // verify that the loan has been paid back (this is the key)
     require(address(this) >= balanceBefore.add(interest), "loan not paid back")    
@@ -71,7 +75,7 @@ contract Borrower is Ownable {
     // ...
     
     // pay it back
-    payable(address(lender)).transfer(amountowed);
+    payable(address(lender)).transfer(amountOwed);
   }
   
   // [...]
@@ -117,7 +121,7 @@ contract Lender {
 }
 ```
 
-This is pretty basic functionality. But now an attacker can drain your contract. All the malicious Borrower has to do is call `flashLoan` with a `amount` equal to any amount up to the Lender's entire contract balance. Then in their `execute()` function, simple call the `deposit()` function on Lender, sending the entire amount owed.
+This is pretty basic functionality. But now an attacker can drain your contract. All the malicious Borrower has to do is call `flashLoan` with a `amount` equal to the Lender's entire contract balance. Then in their `execute()` function, simply call the `deposit()` function on Lender, sending the entire amount owed.
 
 The result is that the Lending contract has the balance it expects. It will think the loan has been paid back. But now the attacker has a balance in the `balances` mapping equal to the Lender's entire contract balance, and so can withdraw all the money from the contract via the `withdraw` function.
 
@@ -127,19 +131,19 @@ There are two solutions to this.
 
 This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan.
 
-*Solution #2* (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might change the Lender contract's balance, without having to worry about it affecting the flash-loan accounting.
+*Solution #2* (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might change the Lender contract's balance, without having to worry about it affecting the flash-loan accounting. We do this by restricting the Borrower so that they must use a _specific function_ on Lender to pay back their loan.
 
 ## How it works
 
 Here is how it works (simplest example). This is simple instantiation of "Solution #2":
 
 ```
-contract BetterLender {
+contract BetterLender is ReentrancyGuard {
   // [...]
   
   uint256 private _debt;
   
-  flashLoan(uint256 amount) public {
+  flashLoan(uint256 amount) public nonReentrant {
     // calculate the interest the borrower has to pay
     uint256 interest = amount.add(amount.mul(interestRate).div(100));
     
@@ -188,7 +192,7 @@ contract Borrower is Ownable {
     // ...
     
     // pay it back
-    lender.repay(amountowed);
+    lender.repay(amountOwed);
   }
   
   // [...]
@@ -244,10 +248,10 @@ The general security argument for why this approach to verifying flash loan repa
 
 - And if the `_debt` variable is `0`, then either the loan has been entirely repaid, or there was no loan to begin with.
 
-# Bigger security considerations
+# Security considerations
 
 Flash loans have the effect of temporarly decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then:
 
-1. You should be very careful before deciding whether or not to use _any_ flash loans at all. These easy-flash-loans won't magically make your internal logic safe to use with flash loans generally.
+1. You should be very careful before deciding whether or not to use _any_ flash loans at all. These easy-flash-loans won't magically make your internal logic safe to use with flash loans generally. While the loan is out and your contract balance(s) are low, any internal logic that relies on `address(this).balance` or `token.balanceOf(address(this))` may not act as intended.
 
-2. You should carefully consider whether you can design away those direct balance-dependencies. See if you can perform the same logic without _ever_ invoking `address(this).balance` or `token.balanceOf(address(this))`.
+2. You should carefully consider whether you can design away those direct balance-dependencies. See if you can perform the same logic without _ever_ invoking `address(this).balance` or `token.balanceOf(address(this))`. If you can, do it.
