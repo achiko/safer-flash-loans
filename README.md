@@ -250,8 +250,16 @@ The general security argument for why this approach to verifying flash loan repa
 
 # Security considerations
 
+## For lenders
+
 Flash loans have the effect of temporarly decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then:
 
 1. You should be very careful before deciding whether or not to use _any_ flash loans at all. These easy-flash-loans won't magically make your internal logic safe to use with flash loans generally. While the loan is out and your contract balance(s) are low, any internal logic that relies on `address(this).balance` or `token.balanceOf(address(this))` may not act as intended.
 
 2. You should carefully consider whether you can design away those direct balance-dependencies. See if you can perform the same logic without _ever_ invoking `address(this).balance` or `token.balanceOf(address(this))`. If you can, do it.
+
+## For borrowers
+
+A malicious flash lender could front-run your flash borrow with an agressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
+
+So if the project from which you are taking flash loans has the ability to instantly update the fee they charge, then it would be wise to implement a "fee check" in your Borrower contracts that reverts if the fee is larger than you expect.
