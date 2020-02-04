@@ -24,7 +24,7 @@ In particular, you need to lock down the all of the most interesting functionali
 
 The usual flash-loan pattern requires your users to take their borrowed money to some other project. But with the easy-flash-loans pattern presented here, your users can borrow money from your project _and use it to interact with your project_. This can be quite powerful for any project that requires arbitraguers in order for your mechanisms to behave properly (e.g.: most interesting DeFi projects).
 
-For example, it could allow arbitraguers to to liqudate loans on your platform without requiring any up-front capital of their own and without having to go get a flash loan from some other project.
+For example, it could allow arbitraguers to liqudate loans on your platform without requiring any up-front capital of their own and without having to go get a flash loan from some other project.
 
 ### Explaination of the problem
 
