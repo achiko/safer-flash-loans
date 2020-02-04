@@ -48,7 +48,7 @@ contract Lender is ReentrancyGuard {
     uint256 interest = amount.mul(interestRate).div(100);
     
     // verify that the loan has been paid back (this is the key)
-    require(address(this) >= balanceBefore.add(interest), "loan not paid back")    
+    require(address(this).balance >= balanceBefore.add(interest), "loan not paid back")    
   }
   
   // [...]
@@ -114,7 +114,7 @@ contract Lender {
     uint256 interest = amount.add(amount.mul(interestRate).div(100));
     
     // verify that the loan has been paid back (this is the key)
-    require(address(this) >= balanceBefore.add(interest), "loan not paid back")    
+    require(address(this).balance >= balanceBefore.add(interest), "loan not paid back")    
   }
   
   // [...]
@@ -127,11 +127,11 @@ The result is that the Lending contract has the balance it expects. It will thin
 
 There are two solutions to this.
 
-*Solution #1* (what most flash loan projects choose): lock down most/all functions in the Lender contract with a `nonReentrant` modifier. For example, the `deposit` function nwould have the `nonReentrant` modifier, so the above attack would not work.
+**Solution #1** (what most flash loan projects choose): lock down most/all functions in the Lender contract with a `nonReentrant` modifier. For example, the `deposit` function nwould have the `nonReentrant` modifier, so the above attack would not work.
 
 This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan.
 
-*Solution #2* (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might change the Lender contract's balance, without having to worry about it affecting the flash-loan accounting. We do this by restricting the Borrower so that they must use a _specific function_ on Lender to pay back their loan.
+**Solution #2** (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might change the Lender contract's balance, without having to worry about it affecting the flash-loan accounting. We do this by restricting the Borrower so that they must use a _specific function_ on Lender to pay back their loan.
 
 ## How it works
 
