@@ -82,7 +82,7 @@ contract Borrower is Ownable {
 }
 ```
 
-The key here is that the Lender contract checks whether or not the Borrower has paid back their loan _by checking the contract balance before and after the loan_. This is not ideal. It means that any user action that might change the contract balance (other than paying back the loan) must be restricted during the time the Borrower has the loan.
+The key here is that the Lender contract checks whether or not the Borrower has paid back their loan _by checking the contract balance before and after the loan_. This is not ideal. **It means that any user action that increases the contract balance is interpretted as the Borrower having paid back the loan.** But that's a very dangerous assumption.
 
 For example, suppose the above Lending contract had the following two functions that allow investors to add/remove money to the lending pool:
 
@@ -125,13 +125,15 @@ This is pretty basic functionality. But now an attacker can drain your contract.
 
 The result is that the Lending contract has the balance it expects. It will think the loan has been paid back. But now the attacker has a balance in the `balances` mapping equal to the Lender's entire contract balance, and so can withdraw all the money from the contract via the `withdraw` function.
 
+This all stems from the fact that every increase of the contract balances is interpretted as the Borrower repaying a loan.
+
 There are two solutions to this.
 
-**Solution #1** (what most flash loan projects choose): lock down most/all functions in the Lender contract with a `nonReentrant` modifier. For example, the `deposit` function nwould have the `nonReentrant` modifier, so the above attack would not work.
+**Solution #1** (what most flash loan projects choose): lock down most/all functions in the Lender contract with a `nonReentrant` modifier. For example, the `deposit` function would have the `nonReentrant` modifier, so the above attack would not work.
 
-This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan.
+This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan. It is essentially _guaranteeing_ that all contracts balance increases really _are_ due to the borrower paying back the loan, because no other interaction (e.g.: depositing money into the loan pool) is even possible.
 
-**Solution #2** (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might change the Lender contract's balance, without having to worry about it affecting the flash-loan accounting. We do this by restricting the Borrower so that they must use a _specific function_ on Lender to pay back their loan.
+**Solution #2** (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might increase the Lender contract's balance, without us assuming those intereactions are loan repayments. We do this by restricting the Borrower so that they must use a _specific function_ on the Lender contract in order to pay back their loan. Only repayments via this special function are counted as the Borrower "paying back" their loan.
 
 ## How it works
 
