@@ -3,12 +3,13 @@ pragma solidity 0.6.0;
 
 import "./IETHFlashBorrower.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/math/SafeMath.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/utils/ReentrancyGuard.sol";
 
 
 
 // @notice Any contract that inherits this contract becomes a flash lender of any/all ETH that it holds
 // @dev DO NOT USE. This is has not been audited.
-contract ETHFlashLender {
+contract ETHFlashLender is ReentrancyGuard {
     using SafeMath for uint256;
     
     // should never be changed by inheriting contracts
@@ -21,9 +22,7 @@ contract ETHFlashLender {
 
     // @notice Borrow ETH via a flash loan. See ETHFlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
-    // @audit - is reentrancy okay here?
-    // I would love to NOT have to use the reentrancy guard 
-    function ETHFlashLoan(uint256 amount) external {
+    function ETHFlashLoan(uint256 amount) external nonReentrant {
         
         // record debt
         _ethBorrowerDebt = amount.mul(ONE.add(_ethBorrowFee)).div(ONE);
