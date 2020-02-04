@@ -32,7 +32,7 @@ Most other flash loans work like this (oversimplified example to get to the poin
 
 ```
 contract Lender is ReentrancyGuard {
-  // [...]
+  // ...
   
   flashLoan(uint256 amount) public nonReentrant {
     // record contract balance
@@ -51,7 +51,7 @@ contract Lender is ReentrancyGuard {
     require(address(this).balance >= balanceBefore.add(interest), "loan not paid back")    
   }
   
-  // [...]
+  // ...
 }
 ```
 
@@ -59,7 +59,7 @@ And then, the Borrower's contract looks like this:
 
 ```
 contract Borrower is Ownable {
-// [...]
+  // ...
 
   // address of the Lender contract
   Lender public constant lender = Lender(0x123456);
@@ -78,7 +78,7 @@ contract Borrower is Ownable {
     payable(address(lender)).transfer(amountOwed);
   }
   
-  // [...]
+  // ...
 }
 ```
 
@@ -88,7 +88,7 @@ For example, suppose the above Lending contract had the following two functions 
 
 ```
 contract Lender {
-  // [...]
+  // ...
   mapping(address => uint256) public balances;
   
   function deposit() public payable {
@@ -117,7 +117,7 @@ contract Lender {
     require(address(this).balance >= balanceBefore.add(interest), "loan not paid back")    
   }
   
-  // [...]
+  // ...
 }
 ```
 
@@ -139,7 +139,7 @@ Here is how it works (simplest example). This is simple instantiation of "Soluti
 
 ```
 contract BetterLender is ReentrancyGuard {
-  // [...]
+  // ...
   
   uint256 private _debt;
   
@@ -165,7 +165,7 @@ contract BetterLender is ReentrancyGuard {
     _debt = _debt.sub(msg.value);
   }
   
-  // [...]
+  // ...
 }
 ```
 Notice that `address(this).balance` is never involed.
@@ -176,7 +176,7 @@ And then, the Borrower's contract looks like this:
 
 ```
 contract Borrower is Ownable {
-// [...]
+  // ...
 
   // address of the Lender contract
   BetterLender public constant lender = BetterLender(0x123456);
@@ -195,7 +195,7 @@ contract Borrower is Ownable {
     lender.repay(amountOwed);
   }
   
-  // [...]
+  // ...
 }
 ```
 
