@@ -242,7 +242,7 @@ The general security argument for why this approach to verifying flash loan repa
 
 - The only function that can increase the `_debt` variable is the `flashLoan` function. This sets the `_debt` variable to exactly the amount the borrower owes.
 
-- The only function that can decrease the `_debt` variable is the `repay` function, which decreases the `_debt` variable by _exactly_ the amount of money that has been repaid via the `reapy` function.
+- The only function that can decrease the `_debt` variable is the `repay` function, which decreases the `_debt` variable by _exactly_ the amount of money that has been repaid via the `repay` function.
 
 - Therefore, if the loan has not been entirely repaid, then the `_debt` variable is greater than `0`.
 
