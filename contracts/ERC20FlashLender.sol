@@ -4,14 +4,14 @@ pragma solidity 0.6.0;
 import "./IERC20FlashBorrower.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/math/SafeMath.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/token/ERC20/IERC20.sol";
-
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/utils/ReentrancyGuard.sol";
 
 
 
 
 // @notice Any contract that inherits this contract becomes a flash lender of any/all ERC20 tokens that it holds
 // @dev DO NOT USE. This is has not been audited.
-contract ERC20FlashLender {
+contract ERC20FlashLender is ReentrancyGuard {
     using SafeMath for uint256;
     
     // private vars -- these should never be changed by inheriting contracts
@@ -25,10 +25,7 @@ contract ERC20FlashLender {
 
     // @notice Borrow tokens via a flash loan. See ERC20FlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
-    // @audit - is reentrancy okay here?
-    // It would allow borrowing several different tokens in one txn.
-    // Bit it is harder to reason about, so I'm leaning towards adding the nonReentrant modifier here.
-    function ERC20FlashLoan(address token, uint256 amount) external {
+    function ERC20FlashLoan(address token, uint256 amount) external nonReentrant {
         // set token
         _borrowedToken = IERC20(token); // used during repayment
         
