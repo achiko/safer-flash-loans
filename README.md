@@ -131,7 +131,7 @@ There are two solutions to this.
 
 **Solution #1** (what most flash loan projects choose): lock down most/all functions in the Lender contract with a `nonReentrant` modifier. For example, the `deposit` function would have the `nonReentrant` modifier, so the above attack would not work.
 
-This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan. It is essentially _guaranteeing_ that all contracts balance increases really _are_ due to the borrower paying back the loan, because no other interaction (e.g.: depositing money into the loan pool) is even possible.
+This approach prevents all further meaningful interactions with the Lender contract while the Borrower has the loan. It is essentially _guaranteeing_ that all contract balance increases really _are_ due to the borrower paying back the loan, because no other interaction (e.g.: depositing money into the loan pool) is even possible.
 
 **Solution #2** (what we're doing here): Check whether the Borrower has paid back the loan _without_ looking at the Lender contract's balance. This frees up users to be able to interact with your contract in all kinds of ways that might increase the Lender contract's balance, without us assuming those intereactions are loan repayments. We do this by restricting the Borrower so that they must use a _specific function_ on the Lender contract in order to pay back their loan. Only repayments via this special function are counted as the Borrower "paying back" their loan.
 
