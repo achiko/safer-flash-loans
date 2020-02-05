@@ -170,7 +170,7 @@ contract BetterLender is ReentrancyGuard {
   // ...
 }
 ```
-Notice that `address(this).balance` is never involed.
+Notice that `address(this).balance` is never involved.
 
 The Borrower contract is mostly unchanged. The only difference is that they must _explicitly_ repay the loan by calling BetterLender's `repay()` function.
 
