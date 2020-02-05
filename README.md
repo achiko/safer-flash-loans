@@ -18,7 +18,7 @@ And then magically have safe flash-lending capability for your contract without 
 
 ## How is this different from other flash loans?
 
-With the usual flash-loan patterns you see in other projects, you usually DO have to be lock down the rest of your contract functionality with `nonReentrant` modifiers -- meaning your users have to _go away to some other Ethereum project_ to use the money they borrowed from you.
+With the usual flash-loan patterns you see in other projects, you usually DO have to be careful to lock down the rest of your contract functionality with `nonReentrant` modifiers -- meaning your users have to _go away to some other Ethereum project_ to use the money they borrowed from you.
 
 In particular, you need to lock down the all of the most interesting functionality with `nonReentrant` modifiers if you want to support flash loans (or else risk having your contract drained by attackers). For example, if you provide overcollateralized loans and also flash loans, your users will not be able to _use_ flash loans to liquidate overcollateralized loans that are in default -- because taking out the flash loan and then _reentering_ the contract to liquidate the defaulting loan would be blocked by your reentrancy gaurds.
 
