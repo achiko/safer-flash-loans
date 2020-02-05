@@ -147,7 +147,7 @@ contract BetterLender is ReentrancyGuard {
   
   flashLoan(uint256 amount) public nonReentrant {
     // calculate the interest the borrower has to pay
-    uint256 interest = amount.add(amount.mul(interestRate).div(100));
+    uint256 interest = amount.mul(interestRate).div(100);
     
     // record the incurred debt
     _debt = amount.add(interest);
