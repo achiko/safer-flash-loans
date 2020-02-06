@@ -137,7 +137,7 @@ This approach prevents all further meaningful interactions with the Lender contr
 
 ## How it works
 
-Here is how it works (simplest example). This is simple instantiation of "Solution #2":
+Here is how it works (simplest example). This is a simple instantiation of "Solution #2":
 
 ```
 contract BetterLender is ReentrancyGuard {
@@ -234,7 +234,7 @@ contract MyContract is ERC20FlashLender, ETHFlashLender {
 }
 ```
 
-In all cases, is is critical that your `MyContract` MUST NOT shadow/overwrite any function or private variable in `ERC20FlashLender` or `ERC20FlashLender`.
+In all cases, it is critical that your `MyContract` MUST NOT shadow/overwrite any function or private variable in `ERC20FlashLender` or `ERC20FlashLender`.
 
 # Security argument
 
