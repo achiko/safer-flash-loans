@@ -36,7 +36,7 @@ contract ERC20FlashLender is ReentrancyGuard {
         require(_borrowedToken.transfer(msg.sender, amount), "borrow failed");
         
         // hand over control to borrower
-        IERC20FlashBorrower(msg.sender).executeOnERC20FlashLoan();
+        IERC20FlashBorrower(msg.sender).executeOnERC20FlashLoan(amount);
         
         // check that debt was fully repaid
         require(_tokenBorrowerDebt == 0, "loan not paid back");
