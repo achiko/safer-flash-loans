@@ -21,7 +21,7 @@ contract ERC20FlashBorrower is Ownable {
     
     // this is called by ERC20FlashLender after borrower has received the tokens
     // every ERC20FlashBorrower must implement an `executeOnERC20FlashLoan()` function.
-    function executeOnERC20FlashLoan() external {
+    function executeOnERC20FlashLoan(uint256 amount) external {
         require(msg.sender == address(erc20FlashLender), "only lender can execute");
         
         //... do whatever you want with the tokens
