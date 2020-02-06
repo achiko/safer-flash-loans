@@ -18,7 +18,7 @@ contract ETHFlashBorrower is Ownable {
     
     // this is called by ETHFlashLender after borrower has received the ETH
     // every ETHFlashBorrower must implement an `executeOnETHFlashLoan()` function.
-    function executeOnETHFlashLoan() external {
+    function executeOnETHFlashLoan(uint256 amount) external {
         require(msg.sender == address(lender), "only lender can execute");
         
         //... do whatever you want with the ETH
