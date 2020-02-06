@@ -31,7 +31,7 @@ contract ETHFlashLender is ReentrancyGuard {
         msg.sender.transfer(amount);
         
         // hand over control to borrower
-        IETHFlashBorrower(msg.sender).executeOnETHFlashLoan();
+        IETHFlashBorrower(msg.sender).executeOnETHFlashLoan(amount);
         
         // check that debt was fully repaid
         require(_ethBorrowerDebt == 0, "loan not paid back");
