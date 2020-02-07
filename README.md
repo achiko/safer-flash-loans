@@ -265,3 +265,7 @@ Flash loans have the effect of temporarly decreasing your contract's balance (bo
 A malicious flash lender could front-run your flash borrow with an agressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
 
 So if the project from which you are taking flash loans has the ability to instantly update the fee they charge, then it would be wise to implement a "fee check" in your Borrower contracts that reverts if the fee is larger than you expect.
+
+# Next steps
+
+I don't have any plans to develop this any further. Please feel free to fork it and own it.
