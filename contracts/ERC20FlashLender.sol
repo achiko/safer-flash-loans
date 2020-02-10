@@ -13,14 +13,18 @@ contract ERC20FlashLender {
     using SafeMath for uint256;
 
     uint256 internal _tokenBorrowFee; // e.g.: 0.003e18 means 0.3% fee
-
     uint256 constant internal ONE = 1e18;
+
+    // only whitelist tokens whose `transferFrom` function returns false (or reverts) on failure
+    mapping(address => bool) internal _whitelist;
 
     // @notice Borrow tokens via a flash loan. See ERC20FlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
     // @audit This _shouldn't_ need a `nonReentrant` modifier. Please double check this.
-    // Reentering via this function allows several different ERC20 flash loans in a single txn
+    // @dev Reentering via this function allows borrowing several different ERC20 tokens in a single txn
     function ERC20FlashLoan(address token, uint256 amount) external {
+        // token must be whitelisted by Lender
+        require(_whitelist[token], "token not whitelisted");
 
         // record debt
         uint256 debt = amount.mul(ONE.add(_tokenBorrowFee)).div(ONE);
