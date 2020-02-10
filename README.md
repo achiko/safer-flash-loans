@@ -203,6 +203,36 @@ contract Borrower is Ownable {
 
 That's it! The flash loan functionality doesn't even look any other part of the contract -- not even the contract balance. So there is no need to lock down the rest of your contract for the flash loan's sake.
 
+When Lending ERC20 tokens instead of ETH, the pattern can be even simpler by having the Lender's `flashLoan` function automatically repay the borrower's loan (thanks to Emilio Frangella for this idea). Ie:
+
+```
+contract TokenLender {
+  // ...
+  
+  flashLoan(address token, uint256 amount) public {
+    // calculate the interest the borrower has to pay
+    uint256 interest = amount.mul(interestRate).div(100);
+    
+    // record the incurred debt
+    uint256 debt = amount.add(interest);
+    
+    // send money to borrower
+    require(IERC20(token).transfer(msg.sender, amount), "borrow failed");
+    
+    // hand control over to the borrower
+    Borrower(msg.sender).execute();
+    
+    // repay the loan
+    require(IERC20(token).transferFrom(msg.sender, address(this), debt), "repayment failed");
+    
+  }
+  
+  // ...
+}
+```
+
+
+
 # How to use the contracts
 
 To add ERC20 flash loans to your contract, simply do:
@@ -238,31 +268,47 @@ In all cases, it is critical that your `MyContract` MUST NOT shadow/overwrite an
 
 # Security argument
 
-The general security argument for why this approach to verifying flash loan repayment is safe:
+The general security arguments for why this approach to verifying flash loan repayment is safe:
+
+## For ETH flash loans:
 
 - Before any flash loan, the `_debt` variable is 0.
 
 - The only function that can increase the `_debt` variable is the `flashLoan` function. This sets the `_debt` variable to exactly the amount the borrower owes.
 
-- The only function that can decrease the `_debt` variable is the `repay` function, which decreases the `_debt` variable by _exactly_ the amount of money that has been repaid via the `repay` function.
+- Since the `flashLoan` function has a `nonReentrant` modifier, the only way to modify the value of the `_debt` variable once a loan has been taken out is by calling the `repay` function. The `repay` function decreases the `_debt` variable by exactly the amount that has been repaid.
 
 - Therefore, if the loan has not been entirely repaid, then the `_debt` variable is greater than `0`.
 
 - And if the `_debt` variable is `0`, then either the loan has been entirely repaid, or there was no loan to begin with.
 
+## For ERC20 flash loans
+
+- The debt owed is computed and stored as a local variable in the `flashLoan` function.
+
+- Once set, the local debt variable cannot be changed (even upon reentry into the `flashLoan` function, if that is allowed).
+
+- Before the `flashLoan` function finishes execution, it transfers the debt owed from the Borrower back to the Lender and reverts on failure.
+
+- Hence either (a) the `flashLoan` function does not finish execution (in which case the txn fails and the loan is nullified) or (b) the `flashLoan` function _does_ finish execution, in which case the loan has been repaid.
+
+- Note that the argument here does not depend on the `flashLoan` function having the `nonReentrant` modifier (as it did in the ETH flash loan case). 
+
 # Security considerations
 
 ## For lenders
 
-Flash loans have the effect of temporarly decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then:
+Flash loans have the effect of temporarily decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then:
 
 1. You should be very careful before deciding whether or not to use _any_ flash loans at all. These easy-flash-loans won't magically make your internal logic safe to use with flash loans generally. While the loan is out and your contract balance(s) are low, any internal logic that relies on `address(this).balance` or `token.balanceOf(address(this))` may not act as intended.
 
 2. You should carefully consider whether you can design away those direct balance-dependencies. See if you can perform the same logic without _ever_ invoking `address(this).balance` or `token.balanceOf(address(this))`. If you can, do it.
 
+All other, non-flash-loan functionality should fail gracefully in the event that the Lender contract does not hold the expected amount of ETH/ERC20 tokens. For example, a function that allows a user to withdraw their deposited ERC20 tokens should `revert` if the token's `transfer` or `transferFrom` function returns `false`.
+
 ## For borrowers
 
-A malicious flash lender could front-run your flash borrow with an agressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
+A malicious flash lender could front-run your flash borrow with an aggressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
 
 So if the project from which you are taking flash loans has the ability to instantly update the fee they charge, then it would be wise to implement a "fee check" in your Borrower contracts that reverts if the fee is larger than you expect.
 
