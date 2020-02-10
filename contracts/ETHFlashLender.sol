@@ -22,6 +22,7 @@ contract ETHFlashLender is ReentrancyGuard {
 
     // @notice Borrow ETH via a flash loan. See ETHFlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
+    // @audit The `nonReentrant` modifier is critical here.
     function ETHFlashLoan(uint256 amount) external nonReentrant {
 
         // record debt
@@ -31,7 +32,7 @@ contract ETHFlashLender is ReentrancyGuard {
         msg.sender.transfer(amount);
 
         // hand over control to borrower
-        IETHFlashBorrower(msg.sender).executeOnETHFlashLoan(amount);
+        IETHFlashBorrower(msg.sender).executeOnETHFlashLoan(amount, _ethBorrowerDebt);
 
         // check that debt was fully repaid
         require(_ethBorrowerDebt == 0, "loan not paid back");
