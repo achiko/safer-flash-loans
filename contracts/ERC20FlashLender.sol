@@ -20,9 +20,9 @@ contract ERC20FlashLender is ReentrancyGuard {
 
     // @notice Borrow tokens via a flash loan. See ERC20FlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
-    // @audit With this new refactor, we may be able to remove the `nonReentrant` modifier. This would allow
-    // the borrower to borrow multiple ERC20 tokens in a single txn.
-    function ERC20FlashLoan(address token, uint256 amount) external nonReentrant {
+    // @audit This _shouldn't_ need a `nonReentrant` modifier. Please double check this.
+    // Reentering via this function allows several different ERC20 flash loans in a single txn
+    function ERC20FlashLoan(address token, uint256 amount) external {
 
         // record debt
         uint256 debt = amount.mul(ONE.add(_tokenBorrowFee)).div(ONE);
