@@ -4,14 +4,12 @@ pragma solidity 0.6.0;
 import "./IERC20FlashBorrower.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/math/SafeMath.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/token/ERC20/IERC20.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/utils/ReentrancyGuard.sol";
-
 
 
 
 // @notice Any contract that inherits this contract becomes a flash lender of any/all ERC20 tokens that it holds
 // @dev DO NOT USE. This is has not been audited.
-contract ERC20FlashLender is ReentrancyGuard {
+contract ERC20FlashLender {
     using SafeMath for uint256;
 
     uint256 internal _tokenBorrowFee; // e.g.: 0.003e18 means 0.3% fee
