@@ -13,52 +13,30 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/con
 // @dev DO NOT USE. This is has not been audited.
 contract ERC20FlashLender is ReentrancyGuard {
     using SafeMath for uint256;
-    
-    // private vars -- these should never be changed by inheriting contracts
-    IERC20 private _borrowedToken; // holds the address of the token being borrowed
-    uint256 private _tokenBorrowerDebt; // records how many tokens the borrower must repay
-    
-    // internal vars -- okay for inheriting contracts to change
+
     uint256 internal _tokenBorrowFee; // e.g.: 0.003e18 means 0.3% fee
-    
+
     uint256 constant internal ONE = 1e18;
 
     // @notice Borrow tokens via a flash loan. See ERC20FlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
+    // @audit With this new refactor, we may be able to remove the `nonReentrant` modifier. This would allow
+    // the borrower to borrow multiple ERC20 tokens in a single txn.
     function ERC20FlashLoan(address token, uint256 amount) external nonReentrant {
-        // set token
-        _borrowedToken = IERC20(token); // used during repayment
-        
+
         // record debt
-        _tokenBorrowerDebt = amount.mul(ONE.add(_tokenBorrowFee)).div(ONE);
-        
+        uint256 debt = amount.mul(ONE.add(_tokenBorrowFee)).div(ONE);
+
         // send borrower the tokens
-        require(_borrowedToken.transfer(msg.sender, amount), "borrow failed");
-        
+        require(IERC20(token).transfer(msg.sender, amount), "borrow failed");
+
         // hand over control to borrower
-        IERC20FlashBorrower(msg.sender).executeOnERC20FlashLoan(amount);
-        
-        // check that debt was fully repaid
-        require(_tokenBorrowerDebt == 0, "loan not paid back");
-        
-        // set _token back to 0x0 to recoup gas
-        _borrowedToken = IERC20(0);
+        IERC20FlashBorrower(msg.sender).executeOnERC20FlashLoan(token, amount, debt);
+
+        // repay the debt
+        require(IERC20(token).transferFrom(msg.sender, address(this), debt), "repayment failed");
     }
-    
-    // @notice Repay all or part of the loan
-    function repayERC20FlashLoan(uint256 amount) public {
-        _tokenBorrowerDebt = _tokenBorrowerDebt.sub(amount); // does not allow overpayment
-        require(_borrowedToken.transferFrom(msg.sender, address(this), amount), "repay failed");
-    }
-    
-    function borrowedToken() public view returns (address) {
-        return address(_borrowedToken);
-    }
-    
-    function tokenBorrowerDebt() public view returns (uint256) {
-        return _tokenBorrowerDebt;
-    }
-    
+
     function tokenBorrowerFee() public view returns (uint256) {
         return _tokenBorrowFee;
     }

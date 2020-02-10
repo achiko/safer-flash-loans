@@ -11,37 +11,37 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/con
 // @dev DO NOT USE. This is has not been audited.
 contract ETHFlashLender is ReentrancyGuard {
     using SafeMath for uint256;
-    
+
     // should never be changed by inheriting contracts
     uint256 private _ethBorrowerDebt;
-    
+
     // internal vars -- okay for inheriting contracts to change
     uint256 internal _ethBorrowFee; // e.g.: 0.003e18 means 0.3% fee
-    
+
     uint256 constant internal ONE = 1e18;
 
     // @notice Borrow ETH via a flash loan. See ETHFlashBorrower for example.
     // @audit Necessarily violates checks-effects-interactions pattern.
     function ETHFlashLoan(uint256 amount) external nonReentrant {
-        
+
         // record debt
         _ethBorrowerDebt = amount.mul(ONE.add(_ethBorrowFee)).div(ONE);
-        
+
         // send borrower the tokens
         msg.sender.transfer(amount);
-        
+
         // hand over control to borrower
         IETHFlashBorrower(msg.sender).executeOnETHFlashLoan(amount);
-        
+
         // check that debt was fully repaid
         require(_ethBorrowerDebt == 0, "loan not paid back");
     }
-    
+
     // @notice Repay all or part of the loan
     function repayEthDebt() public payable {
         _ethBorrowerDebt = _ethBorrowerDebt.sub(msg.value); // does not allow overpayment
     }
-    
+
 
     function ethBorrowerDebt() public view returns (uint256) {
         return _ethBorrowerDebt;
