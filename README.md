@@ -104,6 +104,6 @@ So if the project from which you are taking flash loans has the ability to insta
 
 # Credit where it's due
 
-I discovered the ETH variant of this pattern independently. The first iteration of this pattern used the same "explicit payback function" for ERC20 tokens as well. The ERC20 simplification (using `transferFrom` in the flash loan function) is credited to Emilio from Aave -- who in no way is promoting this pattern. If you like it, give credit to Emilio. If you don't like it, blame it on me :).
+I discovered the ETH variant of this pattern independently. The first iteration of this pattern used the same "explicit payback function" for ERC20 tokens as for ETH loan repayments. The ERC20 simplification (using `transferFrom` in the flash loan function) is credited to Emilio from Aave -- who in no way is promoting this pattern. If you like it, give credit to Emilio. If you don't like it, blame it on me :).
 
 I have no intention to develop this further. I may update to fix bugs as they are discovered. Please feel free to fork it, own it, and make flash loans easier, safer, and more flexible for everyone. <3
