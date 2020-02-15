@@ -1,7 +1,8 @@
-pragma solidity 0.6.0;
+pragma solidity 0.5.16;
+
 
 import "./ETHFlashLender.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/ownership/Ownable.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.3.0/contracts/ownership/Ownable.sol";
 
 
 // @notice Used by borrower to flash-borrow ETH from ETHFlashLender

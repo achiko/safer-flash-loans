@@ -1,10 +1,9 @@
-pragma solidity 0.6.0;
+pragma solidity 0.5.16;
 
 
 import "./IETHFlashBorrower.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/math/SafeMath.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/dev-v3.0/contracts/utils/ReentrancyGuard.sol";
-
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.3.0/contracts/math/SafeMath.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/release-v2.3.0/contracts/utils/ReentrancyGuard.sol";
 
 
 // @notice Any contract that inherits this contract becomes a flash lender of any/all ETH that it holds
