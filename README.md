@@ -2,7 +2,7 @@
 
 ## Important!
 
-Don't use these contracts. They have not been audited. I threw this idea together in a few hours and haven't even written tests for these. If you use them in production you are insane.
+Don't use these contracts. They have not been audited. I threw this idea together in a few hours and haven't even written tests for these. Do not use them in production.
 
 ## What is this?
 
