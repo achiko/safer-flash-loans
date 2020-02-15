@@ -70,7 +70,7 @@ contract MyContract is ERC20FlashLender, ETHFlashLender {
 
 ## How is this different from other flash loans?
 
-The current _de facto_  flash loan pattern that you see in other projects checks if the loan has been paid back by doing a before/after balance check on the lending contract.
+The current _de facto_  standard flash loan pattern that you see in other projects checks if the loan has been paid back by doing a before/after balance check on the lending contract.
 
 That is, the check the token/ETH balance of the lending contract before the loan, and then check it again after the loan. If the balance after is at least the balance before (plus the required interest) then it is assumed that the loan has been paid back.
 
