@@ -1,4 +1,4 @@
-# easy-flash-loans
+# safer-flash-loans
 
 ## Warning
 
@@ -94,7 +94,7 @@ In both cases, the result is that there is no need to lock down the rest of your
 
 The risk here is limited. If you whitelist a non-compliant token that may result in your non-compliant token being stolen from the Lender contract. But it cannot be used to steal compliant tokens from your contract.
 
-2.  Flash loans have the effect of temporarily decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then you should be very careful before deciding whether or not to use _any_ flash loans at all (whether this safer-flash-loan pattern, the before/after check pattern, or some other pattern). These easy-flash-loans won't magically make your internal logic safe to use with flash loans generally. Red-flags to look for are any logic that leverages `address(this).balance` or `token.balanceOf(address(this))`.
+2.  Flash loans have the effect of temporarily decreasing your contract's balance (both ETH and ERC20 balances). If your contract relies on its ETH/ERC20 contract balances for business logic, then you should be very careful before deciding whether or not to use _any_ flash loans at all (whether this safer-flash-loan pattern, the before/after check pattern, or some other pattern). These safer-flash-loans won't magically make your internal logic safe to use with flash loans generally. Red-flags to look for are any logic that leverages `address(this).balance` or `token.balanceOf(address(this))`.
 
 ## For borrowers
 
