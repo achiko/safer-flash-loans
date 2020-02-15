@@ -70,9 +70,9 @@ contract MyContract is ERC20FlashLender, ETHFlashLender {
 
 ## How is this different from other flash loans?
 
-The current _de facto_  standard flash loan pattern that you see in other projects checks if the loan has been paid back by doing a before/after balance check on the lending contract.
+The current _de facto_  standard flash loan pattern that you see in other projects checks if the loan has been repaid by doing a before/after balance check on the lending contract.
 
-That is, the check the token/ETH balance of the lending contract before the loan, and then check it again after the loan. If the balance after is at least the balance before (plus the required interest) then it is assumed that the loan has been paid back.
+That is, they check the token/ETH balance of the lending contract before the loan, and then check it again after the loan. If the balance after is at least the balance before (plus the required interest) then it is assumed that the loan has been repaid.
 
 In other words, after giving the tokens/ETH to the borrower, the lender contract interprets all further contract balance increases as loan repayments. This is a dangerous assumption, and can result in trivial attacks on the Lender contract _unless the lender contract locks down all other functionality while the flash loan is out_.
 
@@ -80,9 +80,9 @@ So the before/after balance check patterns works, but only if your project locks
 
 This means that users who borrow from you have to take the borrowed money to some other project to use it. This is not ideal.
 
-The safer-flash-loan pattern ensures that an ERC20 loan has been paid back (or else reverts) not by doing a before/after balance check, but instead by _performing the payback itself_. The flash loan function uses ERC20's `transferFrom` function to perform the loan repayment itself -- reverting if the borrower hasn't approved repayment. In this way, there is no need to try to indirectly detect whether repayment has occurred, because we're performing the repayment action ourselves.
+The safer-flash-loan pattern ensures that an ERC20 loan has been repaid (or else reverts) not by doing a before/after balance check, but instead by _performing the payback itself_. The flash loan function uses ERC20's `transferFrom` function to perform the loan repayment itself -- reverting if the borrower hasn't approved repayment or if the transfer fails. In this way, there is no need to try to indirectly detect whether repayment has occurred, because we're performing the repayment action ourselves. There is no need to give any consideration to the lending contract's balance before or after the loan.
 
-In the case of ETH, there is nothing analogous to ERC20's `transferFrom` function, so the lending contract cannot initiate the loan repayment on behalf of the buyer. Instead, we store the amount of `_ethBorrowerDebt` that the borrower must repay, and we require that the borrower _explicitly_ repay that debt via a `repayEthDebt()` function on the Lender contract. No money sent back to the lender contract is treated as a repayment unless it comes via the `repayEthDebt()`. And the `repayEthDebt()` simply receives ETH and reduces the `_ethBorrowerDebt` by the amount it receives. This completely removes any ambiguity related to what should be treated as a loan repayment.
+In the case of ETH, there is nothing analogous to ERC20's `transferFrom` function, so the lending contract cannot initiate the loan repayment on behalf of the buyer. Instead, we store the amount of `_ethBorrowerDebt` that the borrower must repay, and we require that the borrower _explicitly_ repay that debt via a `repayEthDebt()` function on the Lender contract. No money sent to the lender contract is treated as a loan repayment unless it comes via the `repayEthDebt()`. And the `repayEthDebt()` simply receives ETH and reduces the `_ethBorrowerDebt` by the amount it receives. This completely removes any ambiguity related to what should be treated as a loan repayment.
 
 In both cases, the result is that there is no need to lock down the rest of your contracts with reentrancy guards simply for the sake of your flash loans. (Of course, there may be other, unrelated reasons to use reentrances guards in your contracts).
 
