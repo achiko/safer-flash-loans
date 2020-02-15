@@ -98,9 +98,15 @@ The risk here is limited. If you whitelist a non-compliant token that may result
 
 ## For borrowers
 
-A malicious flash lender could front-run your flash borrow with an aggressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
+1. A malicious flash lender could front-run your flash borrow with an aggressive update to the borrower fee. For example, they could detect your borrow transaction, and then front-run with a fee update that is exactly of the right size to wipe out the entire ETH/token balance of your Borrower contract.
 
 So if the project from which you are taking flash loans has the ability to instantly update the fee they charge, then it would be wise to implement a "fee check" in your Borrower contracts that reverts if the fee is larger than you expect.
+
+This is true for all flash loan patterns.
+
+2. In the example borrower contracts, the lending contract can call the `execute...` function on the borrower contract. A malicious lender contract may call this function even if not initiated by the borrower's `borrow...` function. Keep this in mind use only trusted lender contracts for flash loans. Alternatively, if you are concerned about a possibly malicious flash lender, you may implement a check to be sure that the `execute...` function was called only during the same transaction as the borrower called the `borrow...` function.
+
+This, also, is true for all flash loan patterns.
 
 # Credit where it's due
 
